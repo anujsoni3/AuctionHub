@@ -1,0 +1,29 @@
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .group {
+          animation: slideInUp 0.6s ease-out forwards;
+        }
+        
+        .group:nth-child(1) { animation-delay: 0.1s; }
+        .group:nth-child(2) { animation-delay: 0.2s; }
+        .group:nth-child(3) { animation-delay: 0.3s; }
+        .group:nth-child(4) { animation-delay: 0.4s; }
+        
+        input:focus, textarea:focus {
+          transform: translateY(-1px);
+        }
+        
+        button:active {
+          transform: translateY(1px) !important;
+        }
+      

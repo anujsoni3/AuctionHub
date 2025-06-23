@@ -29,57 +29,6 @@ Staging:     https://voiceagentomnidim-staging.up.railway.app/
 WebSocket:   wss://voiceagentomnidim-production.up.railway.app/ws
 ```
 
----
-
-## 🔐 Authentication & Security
-
-### 🎫 **JWT Token System**
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "securePassword123"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "user_456",
-    "email": "user@example.com",
-    "role": "bidder",
-    "verified": true,
-    "credits": 5000
-  },
-  "expires_in": 3600
-}
-```
-
-### 👤 **User Registration & Verification**
-```http
-POST /auth/register
-Content-Type: application/json
-
-{
-  "email": "newuser@example.com",
-  "password": "securePassword123",
-  "full_name": "John Doe",
-  "phone": "+1234567890",
-  "voice_preference": "en-US"
-}
-```
-
-### 🔄 **Token Refresh**
-```http
-POST /auth/refresh
-Authorization: Bearer <refresh_token>
-```
 
 ---
 

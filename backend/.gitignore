@@ -1,0 +1,51 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Environment files
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# Pip and Python logs
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# VSCode and IDE settings
+.vscode/
+.idea/
+
+# OS and miscellaneous files
+.DS_Store
+Thumbs.db
+
+# Database dumps
+*.sqlite3
+*.db
+
+# Jupyter notebooks (if not using)
+*.ipynb
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+
+# PyInstaller
+*.spec
+
+# gunicorn socket logs (if any)
+*.pid
+*.sock

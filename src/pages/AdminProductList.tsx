@@ -66,113 +66,100 @@ export const AdminProductList: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div
-        className={`absolute inset-0 bg-[url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.06'%3E%3Cpolygon points='30,0 60,30 30,60 0,30'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")] opacity-20`}
-      />
-
+    <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mb-6 shadow-2xl">
-            <Package className="h-10 w-10 text-white" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Package className="h-5 w-5 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
           </div>
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-white via-purple-100 to-indigo-100 bg-clip-text text-transparent mb-4">
-            Product Management
-          </h1>
-          <p className="text-xl text-purple-100 max-w-3xl mx-auto leading-relaxed">
-            Comprehensive dashboard to search, filter, and manage all auction products with real-time bidding insights
+          <p className="text-gray-600">
+            Manage and monitor all auction products with comprehensive dashboard insights
           </p>
         </div>
 
         {/* Statistics Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm font-medium">Total Products</p>
-                <p className="text-3xl font-bold text-white">{products.length}</p>
+                <p className="text-sm font-medium text-gray-600">Total Products</p>
+                <p className="text-2xl font-bold text-gray-900">{products.length}</p>
               </div>
-              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-                <Package className="h-6 w-6 text-purple-300" />
-              </div>
+              <Package className="h-8 w-8 text-gray-400" />
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-200 text-sm font-medium">Active Products</p>
-                <p className="text-3xl font-bold text-green-400">{activeProducts.length}</p>
+                <p className="text-sm font-medium text-gray-600">Active Products</p>
+                <p className="text-2xl font-bold text-green-600">{activeProducts.length}</p>
               </div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6 text-green-300" />
-              </div>
+              <CheckCircle2 className="h-8 w-8 text-green-400" />
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-200 text-sm font-medium">Expired Products</p>
-                <p className="text-3xl font-bold text-red-400">{expiredProducts.length}</p>
+                <p className="text-sm font-medium text-gray-600">Expired Products</p>
+                <p className="text-2xl font-bold text-red-600">{expiredProducts.length}</p>
               </div>
-              <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-red-300" />
-              </div>
+              <AlertCircle className="h-8 w-8 text-red-400" />
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-amber-200 text-sm font-medium">Total Bid Value</p>
-                <p className="text-3xl font-bold text-amber-400">${totalBidValue.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-600">Total Bid Value</p>
+                <p className="text-2xl font-bold text-blue-600">${totalBidValue.toLocaleString()}</p>
               </div>
-              <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-amber-300" />
-              </div>
+              <DollarSign className="h-8 w-8 text-blue-400" />
             </div>
           </div>
         </div>
 
         {/* Search & Filter Section */}
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-12 shadow-xl border border-white/20">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <h2 className="text-3xl font-bold text-white mb-2">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
                 Search & Filter Products
               </h2>
-              <p className="text-purple-200 text-lg">
+              <p className="text-gray-600">
                 Find and manage products with advanced filtering options
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-300 group-focus-within:text-purple-100 transition-colors" />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search by product name..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full sm:w-80 pl-12 pr-4 py-4 bg-white/20 border border-white/30 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-white placeholder-purple-200 transition-all duration-200 backdrop-blur-sm"
+                  className="w-full sm:w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               
-              <div className="relative group">
-                <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-300 group-focus-within:text-purple-100 transition-colors" />
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value as any)}
-                  className="w-full sm:w-52 pl-12 pr-8 py-4 bg-white/20 border border-white/30 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-white transition-all duration-200 appearance-none cursor-pointer backdrop-blur-sm"
+                  className="w-full sm:w-48 pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer bg-white"
                 >
-                  <option value="all" className="bg-slate-800 text-white">All Products</option>
-                  <option value="active" className="bg-slate-800 text-white">Active Only</option>
-                  <option value="expired" className="bg-slate-800 text-white">Expired Only</option>
+                  <option value="all">All Products</option>
+                  <option value="active">Active Only</option>
+                  <option value="expired">Expired Only</option>
                 </select>
               </div>
             </div>
@@ -180,28 +167,27 @@ export const AdminProductList: React.FC = () => {
         </div>
 
         {/* Results Summary */}
-        <div className="mb-8">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 inline-block">
-            <p className="text-purple-100 font-medium">
-              Showing <span className="text-white font-bold">{filteredProducts.length}</span> of{' '}
-              <span className="text-white font-bold">{products.length}</span> products
+        <div className="mb-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 inline-block">
+            <p className="text-blue-800 text-sm font-medium">
+              Showing {filteredProducts.length} of {products.length} products
             </p>
           </div>
         </div>
 
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-8">
-              <Activity className="h-16 w-16 text-purple-300" />
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Activity className="h-8 w-8 text-gray-400" />
             </div>
-            <h3 className="text-3xl font-bold text-white mb-4">No Products Found</h3>
-            <p className="text-xl text-purple-200 max-w-md mx-auto">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Found</h3>
+            <p className="text-gray-600">
               {search ? 'Try adjusting your search criteria or filters' : 'No products have been added yet'}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredProducts.map((product) => {
               const isExpired = new Date(product.time) <= new Date();
               const highestBid = highestBids[product.name] ?? 0;
@@ -210,125 +196,108 @@ export const AdminProductList: React.FC = () => {
               return (
                 <div
                   key={product.id}
-                  className="group relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 p-8 hover:-translate-y-2 border border-white/20"
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
                 >
-                  {/* Delete Button */}
-                  <button
-                    onClick={async () => {
-                      if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
-                        try {
-                          await apiService.deleteProduct(product.id);
-                          setProducts((prev) => prev.filter((p) => p.id !== product.id));
-                        } catch (err) {
-                          alert('Failed to delete product. Check console for details.');
-                          console.error('Delete error:', err);
-                        }
-                      }
-                    }}
-                    className="absolute top-4 right-4 w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-600 rounded-full flex items-center justify-center transition-all duration-200 group/delete"
-                    title="Delete Product"
-                  >
-                    <Trash2 className="h-5 w-5 group-hover/delete:scale-110 transition-transform" />
-                  </button>
-
-                  {/* Status Badge */}
-                  <div className="absolute top-4 left-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
+                  {/* Header with status and delete */}
+                  <div className="flex items-start justify-between mb-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       isExpired 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-green-500 text-white'
+                        ? 'bg-red-100 text-red-800' 
+                        : 'bg-green-100 text-green-800'
                     }`}>
-                      <div className={`w-2 h-2 rounded-full mr-2 ${
-                        isExpired ? 'bg-red-200' : 'bg-green-200'
-                      } animate-pulse`}></div>
                       {isExpired ? 'Expired' : 'Active'}
                     </span>
+
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+                          try {
+                            await apiService.deleteProduct(product.id);
+                            setProducts((prev) => prev.filter((p) => p.id !== product.id));
+                          } catch (err) {
+                            alert('Failed to delete product. Check console for details.');
+                            console.error('Delete error:', err);
+                          }
+                        }
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      title="Delete Product"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
 
-                  {/* Product Header */}
-                  <div className="mt-8 mb-6">
-                    <div className="flex items-start space-x-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                        <Tag className="h-6 w-6 text-white" />
+                  {/* Product Info */}
+                  <div className="mb-6">
+                    <div className="flex items-start space-x-3 mb-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Tag className="h-4 w-4 text-blue-600" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-2xl font-bold text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight line-clamp-2">
+                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                           {product.name}
                         </h3>
                       </div>
                     </div>
                     
-                    <p className="text-slate-600 leading-relaxed line-clamp-3">
+                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
                       {product.description || 'No description available for this product.'}
                     </p>
                   </div>
 
                   {/* Product Stats */}
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                          <TrendingUp className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="text-sm font-semibold text-green-800">Highest Bid</span>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-gray-700">Highest Bid</span>
                       </div>
-                      <span className="text-lg font-bold text-green-700">
+                      <span className="text-lg font-semibold text-gray-900">
                         ${highestBid.toLocaleString()}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                          <Clock className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="text-sm font-semibold text-blue-800">Time Remaining</span>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-700">Time Remaining</span>
                       </div>
-                      <span className={`text-lg font-bold ${
+                      <span className={`text-lg font-semibold ${
                         isExpired ? 'text-red-600' : 'text-blue-600'
                       }`}>
                         {timeLeft}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl border border-purple-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                          <BarChart3 className="h-4 w-4 text-white" />
+                    {product.auction_id && (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <BarChart3 className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-medium text-gray-700">Auction ID</span>
                         </div>
-                        <span className="text-sm font-semibold text-purple-800">Auction ID</span>
+                        <span className="text-sm font-medium text-gray-600">
+                          {product.auction_id}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-purple-600">
-                        {product.auction_id || 'Not assigned'}
-                      </span>
-                    </div>
+                    )}
                   </div>
 
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium text-slate-600">Auction Progress</span>
-                      <span className="text-xs font-medium text-slate-600">
-                        {isExpired ? 'Completed' : 'In Progress'}
-                      </span>
+                  {/* Progress Indicator */}
+                  <div className="pt-3 border-t border-gray-100">
+                    <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                      <span>Auction Status</span>
+                      <span>{isExpired ? 'Completed' : 'Active'}</span>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
-                        className={`h-2 rounded-full transition-all duration-500 ${
+                        className={`h-2 rounded-full ${
                           isExpired 
-                            ? 'bg-gradient-to-r from-red-400 to-red-500 w-full' 
-                            : 'bg-gradient-to-r from-green-400 to-green-500 w-3/4'
+                            ? 'bg-red-500 w-full' 
+                            : 'bg-green-500 w-3/4'
                         }`}
                       ></div>
                     </div>
                   </div>
-
-                  {/* Decorative gradient overlay */}
-                  <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
-                    isExpired 
-                      ? 'bg-gradient-to-r from-red-500/5 to-red-600/5' 
-                      : 'bg-gradient-to-r from-green-500/5 to-emerald-500/5'
-                  }`}></div>
                 </div>
               );
             })}

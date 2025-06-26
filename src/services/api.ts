@@ -1,5 +1,7 @@
-const API_BASE_URL ='https://voiceagent-omnidim.onrender.com/'  ;
+/* ------------------- api.ts ------------------- */
+const API_BASE_URL = 'https://voiceagent-omnidim.onrender.com';
 
+/* ===== Shared Models ===== */
 export interface Product {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ export interface Bid {
   amount: number;
   user_id: string;
   timestamp: string;
+  product_name: string;
   status: string;
 }
 
@@ -24,101 +27,168 @@ export interface Auction {
   valid_until: string;
 }
 
+export interface LoginResponse {
+  message: string;
+  user: { id: string;name: string; username: string };
+}
+
+export interface AdminLoginResponse {
+  message: string;
+  token: string;
+  admin: { name: string; username: string };
+}
+
+/* =========== ApiService =========== */
 class ApiService {
-  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  /* —— generic request wrapper —— */
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      mode: 'cors',
+      credentials: 'include',           // ← always send & receive cookies
       headers: {
         'Content-Type': 'application/json',
-        ...options?.headers,
+        ...options.headers,
       },
       ...options,
     });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(`API ${res.status}: ${txt || res.statusText}`);
     }
-
-    return response.json();
+    return res.json();
   }
 
-  // Public endpoints
-  async getProducts(): Promise<Product[]> {
+  /* ===== Public APIs ===== */
+  getProducts() {
     return this.request<Product[]>('/products');
   }
 
-  async placeBid(productName: string, bidAmount: number, userId: string) {
+  placeBid(product_name: string, bid_amount: number, user_id: string) {
     return this.request('/bid', {
       method: 'POST',
-      body: JSON.stringify({
-        product_name: productName,
-        bid_amount: bidAmount,
-        user_id: userId,
-      }),
+      body: JSON.stringify({ product_name, bid_amount, user_id }),
     });
   }
 
-  async getHighestBid(productKey: string): Promise<{ product: string; highest_bid: number }> {
-    return this.request<{ product: string; highest_bid: number }>(`/highest-bid?product_key=${productKey}`);
+  getHighestBid(k: string) {
+    return this.request<{ product: string; highest_bid: number }>(
+      `/highest-bid?product_key=${k}`
+    );
   }
 
-  async getTimeLeft(productKey: string): Promise<{ product: string; time_remaining_seconds: number }> {
-    return this.request<{ product: string; time_remaining_seconds: number }>(`/time-left?product_key=${productKey}`);
+  getTimeLeft(k: string) {
+    return this.request<{ product: string; time_remaining_seconds: number }>(
+      `/time-left?product_key=${k}`
+    );
   }
 
-  async getBids(productKey: string): Promise<Bid[]> {
-    return this.request<Bid[]>(`/bids?product_key=${productKey}`);
+  getBids(k: string) {
+    return this.request<Bid[]>(`/bids?product_key=${k}`);
   }
 
-  // Admin endpoints
-  async getAdminProducts(): Promise<Product[]> {
+  /* ===== Admin APIs ===== */
+  getAdminProducts() {
     return this.request<Product[]>('/admin/products');
   }
 
-  async createAuction(auction: Omit<Auction, 'id'> & { id: string }) {
+  createAuction(a: Auction) {
     return this.request('/admin/auction', {
       method: 'POST',
-      body: JSON.stringify(auction),
+      body: JSON.stringify(a),
     });
   }
 
-  async createProduct(product: Omit<Product, 'status' | 'bids'>) {
+  createProduct(p: Omit<Product, 'status' | 'bids'>) {
     return this.request('/admin/product', {
       method: 'POST',
-      body: JSON.stringify(product),
+      body: JSON.stringify(p),
     });
   }
 
-  async deleteProduct(productId: string) {
-    return this.request(`/admin/product/${productId}`, {
-      method: 'DELETE',
+  deleteProduct(id: string) {
+    return this.request(`/admin/product/${id}`, { method: 'DELETE' });
+  }
+
+  deleteAuction(id: string) {
+    return this.request(`/admin/auction/${id}`, { method: 'DELETE' });
+  }
+
+  getAdminOverview() {
+    return this.request<{
+      total_products: number;
+      total_auctions: number;
+      total_bids: number;
+      products: Product[];
+    }>('/admin/all_products');
+  }
+
+  getAllAuctions() {
+    return this.request<{
+      total_auctions: number;
+      auctions: Auction[];
+    }>('/admin/all_auctions');
+  }
+
+  getAuctionProducts(id: string) {
+    return this.request<{
+      auction_id: string;
+      total_products: number;
+      products: Product[];
+    }>(`/admin/auction_products/${id}`);
+  }
+
+  /* ===== User Auth ===== */
+  register(data: {
+    name: string;
+    username: string;
+    password: string;
+    mobile_number: string;
+  }) {
+    return this.request('/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
- 
 
-
-  async deleteAuction(auctionId: string) {
-    return this.request(`/admin/auction/${auctionId}`, {
-      method: 'DELETE',
+  login(username: string, password: string) {
+    return this.request<LoginResponse>('/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
     });
   }
-  async getAdminOverview(): Promise<{
-  total_products: number;
-  total_auctions: number;
-  total_bids: number;
-  products: Product[];
-}> {
-  return this.request('/admin/all_products');
-}
-async getAllAuctions(): Promise<{ total_auctions: number; auctions: Auction[] }> {
-  return this.request('/admin/all_auctions');
-}
 
-async getAuctionProducts(auctionId: string): Promise<{
-  auction_id: string;
-  total_products: number;
-  products: Product[];
-}> {
-  return this.request(`/admin/auction_products/${auctionId}`);
+  changePassword(username: string, password: string, new_password: string) {
+    return this.request('/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ username, password, new_password }),
+    });
+  }
+
+  /* ===== Admin Auth ===== */
+  adminLogin(username: string, password: string) {
+    return this.request<AdminLoginResponse>('/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password, role: 'admin' }),
+    });
+  }
+
+  adminChangePassword(username: string, password: string, new_password: string) {
+    return this.request('/admin/change-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        username,
+        password,
+        new_password,
+        role: 'admin',
+      }),
+    });
+  }
+  getUserBids(user_id: string) {
+  return this.request<Bid[]>(`/user-bids?user_id=${user_id}`);
 }
 
 }

@@ -40,63 +40,53 @@ export const AdminAuctions: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
-      {/* Background decorative elements */}
-    <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width=%2260%22%20height=%2260%22%20viewBox=%220%200%2060%2060%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill=%22none%22%20fill-rule=%22evenodd%22%3E%3Cg%20fill=%22%239C92AC%22%20fill-opacity=%220.05%22%3E%3Ccircle%20cx=%2230%22%20cy=%2230%22%20r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-
+    <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mb-6 shadow-2xl">
-            <TrendingUp className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-white via-purple-100 to-indigo-100 bg-clip-text text-transparent mb-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Auction Management
           </h1>
-          <p className="text-xl text-purple-100 max-w-2xl mx-auto leading-relaxed">
-            Monitor and manage all active auctions with real-time insights and comprehensive analytics
+          <p className="text-gray-600">
+            Monitor and manage all auctions with comprehensive analytics
           </p>
           
-          {/* Stats Bar */}
-          <div className="mt-8 flex justify-center">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center space-x-8">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{auctions.length}</div>
-                  <div className="text-sm text-purple-200">Total Auctions</div>
+          {/* Summary Stats */}
+          <div className="mt-6 bg-white rounded-lg shadow p-6 border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">{auctions.length}</div>
+                <div className="text-sm text-gray-600">Total Auctions</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {auctions.filter(a => isAuctionActive(a.valid_until)).length}
                 </div>
-                <div className="h-8 w-px bg-white/20"></div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">
-                    {auctions.filter(a => isAuctionActive(a.valid_until)).length}
-                  </div>
-                  <div className="text-sm text-purple-200">Active</div>
+                <div className="text-sm text-gray-600">Active Auctions</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {auctions.reduce((sum, a) => sum + a.product_ids.length, 0)}
                 </div>
-                <div className="h-8 w-px bg-white/20"></div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-400">
-                    {auctions.reduce((sum, a) => sum + a.product_ids.length, 0)}
-                  </div>
-                  <div className="text-sm text-purple-200">Total Products</div>
-                </div>
+                <div className="text-sm text-gray-600">Total Products</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Auctions Grid */}
+        {/* Auctions List */}
         {auctions.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Activity className="h-12 w-12 text-purple-300" />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Activity className="h-8 w-8 text-gray-400" />
             </div>
-            <h3 className="text-2xl font-semibold text-white mb-2">No Auctions Found</h3>
-            <p className="text-purple-200">Start by creating your first auction to see it here.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Auctions Found</h3>
+            <p className="text-gray-600">Start by creating your first auction to see it here.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {auctions.map((auction) => {
               const isActive = isAuctionActive(auction.valid_until);
               const timeRemaining = getTimeRemaining(auction.valid_until);
@@ -104,36 +94,29 @@ export const AdminAuctions: React.FC = () => {
               return (
                 <div 
                   key={auction.id} 
-                  className="group relative bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-white/20"
+                  className="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-md transition-shadow"
                 >
-                  {/* Status Badge */}
-                  <div className="absolute top-4 right-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {auction.name}
+                    </h3>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       isActive 
-                        ? 'bg-green-100 text-green-800 border border-green-200' 
-                        : 'bg-red-100 text-red-800 border border-red-200'
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
                     }`}>
-                      <div className={`w-2 h-2 rounded-full mr-2 ${
-                        isActive ? 'bg-green-500' : 'bg-red-500'
-                      }`}></div>
                       {isActive ? 'Active' : 'Expired'}
                     </span>
                   </div>
 
-                  {/* Auction Title */}
-                  <div className="mb-6 pt-4">
-                    <h3 className="text-2xl font-bold text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors">
-                      {auction.name}
-                    </h3>
-                  </div>
-
-                  {/* Auction Details */}
-                  <div className="space-y-4 mb-8">
-                    <div className="flex items-center text-slate-600">
-                      <Calendar className="h-5 w-5 mr-3 text-indigo-500" />
+                  {/* Details */}
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
                       <div>
-                        <div className="text-sm font-medium">Valid Until</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="font-medium">Valid Until</div>
+                        <div className="text-xs text-gray-500">
                           {new Date(auction.valid_until).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -145,10 +128,10 @@ export const AdminAuctions: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center text-slate-600">
-                      <Clock className="h-5 w-5 mr-3 text-purple-500" />
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Clock className="h-4 w-4 mr-2 text-gray-400" />
                       <div>
-                        <div className="text-sm font-medium">Time Remaining</div>
+                        <div className="font-medium">Time Remaining</div>
                         <div className={`text-xs font-medium ${
                           isActive ? 'text-green-600' : 'text-red-600'
                         }`}>
@@ -157,11 +140,11 @@ export const AdminAuctions: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center text-slate-600">
-                      <Package className="h-5 w-5 mr-3 text-amber-500" />
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Package className="h-4 w-4 mr-2 text-gray-400" />
                       <div>
-                        <div className="text-sm font-medium">Products</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="font-medium">Products</div>
+                        <div className="text-xs text-gray-500">
                           {auction.product_ids.length} item{auction.product_ids.length !== 1 ? 's' : ''} listed
                         </div>
                       </div>
@@ -171,14 +154,11 @@ export const AdminAuctions: React.FC = () => {
                   {/* Action Button */}
                   <Link
                     to={`/admin/auction/${auction.id}`}
-                    className="group/btn inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
                   >
-                    <Eye className="h-5 w-5 mr-2 transition-transform group-hover/btn:rotate-12" />
-                    <span>View Auction Details</span>
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Details
                   </Link>
-
-                  {/* Decorative gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>
               );
             })}

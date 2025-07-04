@@ -1,14 +1,29 @@
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
-export const ProtectedRoute: React.FC<{ children: JSX.Element; admin?: boolean }> = ({
-  children,
-  admin = false,
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireAdmin?: boolean;
+}
+
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  requireAdmin = false 
 }) => {
-  const { user, admin: adminUser } = useAuth();
+  const { isAuthenticated, isAdminAuthenticated, loading } = useAuth();
 
-  if (admin && !adminUser) return <Navigate to="/admin/login" replace />;
-  if (!admin && !user) return <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  return children;
+  if (requireAdmin) {
+    return isAdminAuthenticated ? <>{children}</> : <Navigate to="/admin/login" />;
+  }
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/user/login" />;
 };

@@ -21,16 +21,11 @@ import {
   Eye,
 } from 'lucide-react';
 
-/* -------------------------------------------------- */
-/*  Minimal local shapes – keeps TS happy             */
-/* -------------------------------------------------- */
+/* Types */
 type BidLite = Pick<Bid, 'amount' | 'status' | 'timestamp' | 'auction_id'>;
+type Txn = Transaction;
 
-type Txn = Transaction; // already has _id, type, amount, timestamp
-
-/* -------------------------------------------------- */
-/*  Sidebar items                                     */
-/* -------------------------------------------------- */
+/* Sidebar config */
 const userSidebarItems = [
   { path: '/user/dashboard', label: 'Dashboard',       icon: <Home   className="h-5 w-5" /> },
   { path: '/user/auctions',  label: 'Browse Auctions', icon: <Search className="h-5 w-5" /> },
@@ -39,82 +34,67 @@ const userSidebarItems = [
 ];
 
 export const UserDashboard: React.FC = () => {
-  const [auctions,      setAuctions]      = useState<Auction[]>([]);
+  const [auctions, setAuctions] = useState<Auction[]>([]);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [userBids,      setUserBids]      = useState<BidLite[]>([]);
-  const [transactions,  setTransactions]  = useState<Txn[]>([]);
-  const [loading,       setLoading]       = useState(true);
+  const [userBids, setUserBids] = useState<BidLite[]>([]);
+  const [transactions, setTransactions] = useState<Txn[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { user }      = useAuth();
+  const { user } = useAuth();
   const { showError } = useToast();
 
-  /* -------------------------------------------------- */
-  /*  Initial load                                      */
-  /* -------------------------------------------------- */
   useEffect(() => {
     if (user?.username) loadDashboardData();
   }, [user?.username]);
 
   const loadDashboardData = async () => {
     setLoading(true);
-    /* ---- 1. Auctions (public) ---- */
+
     try {
       const auctionsData = await auctionService.getAuctions();
       setAuctions(auctionsData.slice(0, 5));
     } catch (e) {
-      console.warn('Auctions fetch failed', e);
       setAuctions([]);
     }
 
-    /* ---- 2. Wallet ---- */
+    let transactionsData: Txn[] = [];
     try {
-      const w = await walletService.getWalletBalance(user!.username);
-      setWalletBalance(w.balance ?? 0);
+      transactionsData = await walletService.getTransactions();
+      setTransactions(transactionsData);
     } catch (e) {
-      console.warn('Wallet fetch failed', e);
-      setWalletBalance(0);
+      setTransactions([]);
     }
 
-    /* ---- 3. Bids ---- */
+    try {
+      const w = await walletService.getWalletBalance(user!.username);
+      const balance = w?.wallet_balance ?? null;
+      setWalletBalance(balance);
+    } catch (e) {
+      // fallback to total added - total spent
+      const totalAdded = transactionsData.filter(t => t.type === 'topup').reduce((sum, t) => sum + (t.amount ?? 0), 0);
+      const totalSpent = transactionsData.filter(t => t.type === 'bid').reduce((sum, t) => sum + (t.amount ?? 0), 0);
+      setWalletBalance(totalAdded - totalSpent);
+    }
+
     try {
       const bids = await auctionService.getUserBids();
       setUserBids(bids);
     } catch (e) {
-      console.warn('Bids fetch failed', e);
       setUserBids([]);
-    }
-
-    /* ---- 4. Transactions ---- */
-    try {
-      const tx = await walletService.getTransactions();
-      setTransactions(tx);
-    } catch (e) {
-      console.warn('Txn fetch failed', e);
-      setTransactions([]);
     }
 
     setLoading(false);
   };
 
-  /* -------------------------------------------------- */
-  /*  Derived data                                      */
-  /* -------------------------------------------------- */
+  /* Derived stats */
   const now = new Date();
-
   const activeAuctions = auctions.filter(a => new Date(a.valid_until) > now);
-
   const endingSoon = auctions.filter(a => {
     const diff = new Date(a.valid_until).getTime() - now.getTime();
-    return diff > 0 && diff < 86_400_000; // 24 h
+    return diff > 0 && diff < 86_400_000; // 24h
   });
+  const totalSpent = transactions.filter(t => t.type === 'bid').reduce((sum, t) => sum + (t.amount ?? 0), 0);
 
-  const totalSpent = transactions
-    .filter(t => t.type === 'bid')
-    .reduce((sum, t) => sum + (t.amount ?? 0), 0);
-
-  /* -------------------------------------------------- */
-  /*  UI: Loading                                       */
-  /* -------------------------------------------------- */
   if (loading) {
     return (
       <Layout title="Dashboard" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
@@ -125,13 +105,9 @@ export const UserDashboard: React.FC = () => {
     );
   }
 
-  /* -------------------------------------------------- */
-  /*  UI: Ready                                         */
-  /* -------------------------------------------------- */
   return (
     <Layout title="Dashboard" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
       <div className="space-y-6">
-        {/* Welcome */}
         <Card>
           <div className="flex items-center justify-between">
             <div>
@@ -151,55 +127,22 @@ export const UserDashboard: React.FC = () => {
           </div>
         </Card>
 
-        {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <StatCard
-            label="Active Auctions"
-            value={activeAuctions.length}
-            Icon={Gavel}
-            color="text-blue-600"
-          />
-          <StatCard
-            label="Ending Soon"
-            value={endingSoon.length}
-            Icon={Timer}
-            color="text-amber-600"
-          />
-          <StatCard
-            label="My Bids"
-            value={userBids.length}
-            Icon={TrendingUp}
-            color="text-green-600"
-          />
-          <StatCard
-            label="Total Spent"
-            value={`₹${totalSpent.toLocaleString()}`}
-            Icon={DollarSign}
-            color="text-purple-600"
-          />
-          {/* New stat */}
-          <StatCard
-            label="Registered Auctions"
-            value={new Set(userBids.map(b => b.auction_id)).size}
-            Icon={Eye}
-            color="text-rose-600"
-          />
+          <StatCard label="Active Auctions" value={activeAuctions.length} Icon={Gavel} color="text-blue-600" />
+          <StatCard label="Ending Soon" value={endingSoon.length} Icon={Timer} color="text-amber-600" />
+          <StatCard label="My Bids" value={userBids.length} Icon={TrendingUp} color="text-green-600" />
+          <StatCard label="Total Spent" value={`₹${totalSpent.toLocaleString()}`} Icon={DollarSign} color="text-purple-600" />
+          <StatCard label="Registered Auctions" value={new Set(userBids.map(b => b.auction_id)).size} Icon={Eye} color="text-rose-600" />
         </div>
 
-        {/* CTA to view registered auctions */}
         <div className="flex justify-end">
-          <Button
-            variant="secondary"
-            onClick={() => (window.location.href = '/user/auctions?registered=1')}
-          >
+          <Button variant="secondary" onClick={() => (window.location.href = '/user/auctions?registered=1')}>
             <Eye className="h-4 w-4 mr-2" />
             My Registered Auctions
           </Button>
         </div>
 
-        {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Auctions */}
           <Card>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">Recent Auctions</h3>
@@ -207,7 +150,6 @@ export const UserDashboard: React.FC = () => {
                 View All
               </Button>
             </div>
-
             {auctions.length === 0 ? (
               <p className="text-center text-slate-500 py-8">No active auctions available</p>
             ) : (
@@ -230,7 +172,6 @@ export const UserDashboard: React.FC = () => {
             )}
           </Card>
 
-          {/* Recent Transactions */}
           <Card>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">Recent Transactions</h3>
@@ -238,7 +179,6 @@ export const UserDashboard: React.FC = () => {
                 View All
               </Button>
             </div>
-
             {transactions.length === 0 ? (
               <p className="text-center text-slate-500 py-8">No transactions yet</p>
             ) : (
@@ -253,17 +193,11 @@ export const UserDashboard: React.FC = () => {
                       )}
                       <div>
                         <h4 className="font-medium text-slate-900 capitalize">{t.type}</h4>
-                        <p className="text-sm text-slate-600">
-                          {new Date(t.timestamp).toLocaleDateString()}
-                        </p>
+                        <p className="text-sm text-slate-600">{new Date(t.timestamp).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p
-                        className={`font-semibold ${
-                          t.type === 'bid' ? 'text-red-600' : 'text-green-600'
-                        }`}
-                      >
+                      <p className={`font-semibold ${t.type === 'bid' ? 'text-red-600' : 'text-green-600'}`}>
                         {t.type === 'bid' ? '-' : '+'}₹{t.amount.toLocaleString()}
                       </p>
                     </div>
@@ -278,18 +212,14 @@ export const UserDashboard: React.FC = () => {
   );
 };
 
-/* -------------------------------------------------- */
-/*  Tiny Stat Card helper                             */
-/* -------------------------------------------------- */
+/* Reusable Card Stat */
 import type { LucideIcon } from 'lucide-react';
-
 interface StatCardProps {
   label: string;
   value: number | string;
   Icon: LucideIcon;
   color: string;
 }
-
 const StatCard: React.FC<StatCardProps> = ({ label, value, Icon, color }) => (
   <Card className="text-center">
     <Icon className={`h-8 w-8 ${color} mx-auto mb-2`} />

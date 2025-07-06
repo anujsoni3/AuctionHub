@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Layout } from '../../components/layout/Layout';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Modal } from '../../components/ui/Modal';
-import { Table } from '../../components/ui/Table';
+/* ------------------------------------------------------------------
+ *  UserWallet  –  full enhanced version
+ * ----------------------------------------------------------------- */
+import React, { useEffect, useMemo, useState } from 'react';
+
+import { Layout }   from '../../components/layout/Layout';
+import { Card }     from '../../components/ui/Card';
+import { Button }   from '../../components/ui/Button';
+import { Input }    from '../../components/ui/Input';
+import { Modal }    from '../../components/ui/Modal';
+import { Table }    from '../../components/ui/Table';
 import { useToast } from '../../components/ui/Toast';
+
 import { walletService, Transaction } from '../../services/walletService';
 import { useAuth } from '../../contexts/AuthContext';
+
 import {
   Wallet,
   Plus,
@@ -18,158 +24,201 @@ import {
   Gavel,
   History,
   CreditCard,
-  RefreshCw
+  RefreshCw,
+  Download,
 } from 'lucide-react';
 
+/* ------------------------------------------------------------------ */
+/*  Sidebar (unchanged)                                               */
+/* ------------------------------------------------------------------ */
 const userSidebarItems = [
-  { path: '/user/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
-  { path: '/user/auctions', label: 'Browse Auctions', icon: <Search className="h-5 w-5" /> },
-  { path: '/user/bids', label: 'My Bids', icon: <Gavel className="h-5 w-5" /> },
-  { path: '/user/wallet', label: 'Wallet', icon: <Wallet className="h-5 w-5" /> },
+  { path: '/user/dashboard', label: 'Dashboard',      icon: <Home   className="h-5 w-5" /> },
+  { path: '/user/auctions',  label: 'Browse Auctions',icon: <Search className="h-5 w-5" /> },
+  { path: '/user/bids',      label: 'My Bids',        icon: <Gavel  className="h-5 w-5" /> },
+  { path: '/user/wallet',    label: 'Wallet',         icon: <Wallet className="h-5 w-5" /> },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  Component                                                         */
+/* ------------------------------------------------------------------ */
 export const UserWallet: React.FC = () => {
-  const [balance, setBalance] = useState(0); // ✅ Initial fallback set to 0
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [showTopupModal, setShowTopupModal] = useState(false);
-  const [topupAmount, setTopupAmount] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [topupLoading, setTopupLoading] = useState(false);
+  /* base state */
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  useEffect(() => {
-    loadWalletData();
-  }, []);
+  const [balanceFromAPI, setBalanceFromAPI] = useState<number | null>(null);
+  const [transactions,   setTransactions]   = useState<Transaction[]>([]);
+  const [loading,        setLoading]        = useState(true);
 
-  const loadWalletData = async () => {
+  /* refresh + top‑up state */
+  const [refreshing,   setRefreshing]   = useState(false);
+  const [topupModal,   setTopupModal]   = useState(false);
+  const [topupBusy,    setTopupBusy]    = useState(false);
+  const [topupAmount,  setTopupAmount]  = useState('');
+
+  /* quick‑top‑up presets */
+  const QUICK   = [500, 1000, 2000, 5000];
+
+  /* ---------------------------------------------------------------- */
+  /*  Derived totals & balance                                        */
+  /* ---------------------------------------------------------------- */
+  const { totalAdded, totalSpent, derivedBalance } = useMemo(() => {
+    const added = transactions.filter(t => t.type === 'topup').reduce((s, t) => s + t.amount, 0);
+    const spent = transactions.filter(t => t.type === 'bid'  ).reduce((s, t) => s + t.amount, 0);
+    return { totalAdded: added, totalSpent: spent, derivedBalance: added - spent };
+  }, [transactions]);
+
+  const currentBalance = balanceFromAPI ?? derivedBalance;
+
+  /* ---------------------------------------------------------------- */
+  /*  Data loader                                                     */
+  /* ---------------------------------------------------------------- */
+  useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
     if (!user) return;
-
+    setRefreshing(true);
     try {
-      // Load wallet balance
+      /* balance */
       try {
-        const walletData = await walletService.getWalletBalance(user.username);
-        const balanceVal = walletData?.wallet_balance ?? 0;
-        setBalance(balanceVal);
-      } catch (walletError) {
-        console.warn('Failed to load wallet balance:', walletError);
-        setBalance(0); // ✅ Fallback to 0 instead of 500
+        const res = await walletService.getWalletBalance(user.username);
+        setBalanceFromAPI(res?.wallet_balance ?? null);
+      } catch {
+        setBalanceFromAPI(null);            // fall back to derived balance
       }
 
-      // Load transactions
+      /* transactions */
       try {
-        const transactionsData = await walletService.getTransactions();
-        setTransactions(transactionsData);
-      } catch (transError) {
-        console.warn('Failed to load transactions:', transError);
+        const tx = await walletService.getTransactions();
+        setTransactions(tx);
+      } catch {
         setTransactions([]);
       }
-    } catch (error) {
-      console.error('Wallet data load error:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleTopup = async () => {
-    const amount = parseFloat(topupAmount);
-
-    if (isNaN(amount) || amount <= 0) {
-      showError('Please enter a valid amount');
+  /* ---------------------------------------------------------------- */
+  /*  Top‑up handler                                                  */
+  /* ---------------------------------------------------------------- */
+  const doTopup = async () => {
+    const amt = parseFloat(topupAmount);
+    if (isNaN(amt) || amt < 10 || amt > 100_000) {
+      showError('Enter an amount between ₹10 and ₹1,00,000');
       return;
     }
 
-    if (amount < 10) {
-      showError('Minimum top-up amount is ₹10');
-      return;
-    }
-
-    if (amount > 100000) {
-      showError('Maximum top-up amount is ₹1,00,000');
-      return;
-    }
-
-    setTopupLoading(true);
+    setTopupBusy(true);
     try {
-      await walletService.topupWallet(amount);
-      showSuccess(`Successfully added ₹${amount.toLocaleString()} to your wallet!`);
-      setShowTopupModal(false);
+      await walletService.topupWallet(amt);
+      showSuccess(`Added ₹${amt.toLocaleString()} to your wallet`);
+      setTopupModal(false);
       setTopupAmount('');
-      loadWalletData();
-    } catch (error: any) {
-      showError(error.response?.data?.error || 'Failed to top up wallet');
+      await loadData();
+    } catch (err: any) {
+      showError(err?.response?.data?.error || 'Top‑up failed');
     } finally {
-      setTopupLoading(false);
+      setTopupBusy(false);
     }
   };
 
-  const quickTopupAmounts = [500, 1000, 2000, 5000];
+  /* ---------------------------------------------------------------- */
+  /*  CSV download                                                    */
+  /* ---------------------------------------------------------------- */
+  const downloadCSV = () => {
+    if (transactions.length === 0) {
+      showError('No transactions to export');
+      return;
+    }
+    /* create CSV rows */
+    const header = Object.keys(transactions[0]).join(',');
+    const rows   = transactions.map(t =>
+      Object.values(t).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+    );
+    const csv = [header, ...rows].join('\n');
 
-  const transactionColumns = [
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = 'transactions.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showSuccess('CSV downloaded');
+  };
+
+  /* ---------------------------------------------------------------- */
+  /*  Table columns                                                   */
+  /* ---------------------------------------------------------------- */
+  const columns = [
     {
       key: 'type',
       label: 'Type',
-      render: (value: string) => (
+      render: (v: string) => (
         <div className="flex items-center">
-          {value === 'bid' ? (
-            <ArrowDownLeft className="h-4 w-4 text-red-500 mr-2" />
-          ) : (
-            <ArrowUpRight className="h-4 w-4 text-green-500 mr-2" />
-          )}
-          <span className="capitalize font-medium">{value}</span>
+          {v === 'bid'
+            ? <ArrowDownLeft className="h-4 w-4 text-red-500 mr-2" />
+            : <ArrowUpRight  className="h-4 w-4 text-green-500 mr-2" />}
+          <span className="capitalize font-medium">{v}</span>
         </div>
-      )
+      ),
     },
     {
       key: 'amount',
       label: 'Amount',
-      render: (value: number, row: Transaction) => (
+      render: (v: number, row: Transaction) => (
         <span className={`font-semibold ${row.type === 'bid' ? 'text-red-600' : 'text-green-600'}`}>
-          {row.type === 'bid' ? '-' : '+'}₹{value?.toLocaleString()}
+          {row.type === 'bid' ? '-' : '+'}₹{v.toLocaleString()}
         </span>
-      )
+      ),
     },
     {
       key: 'timestamp',
       label: 'Date & Time',
-      render: (value: string) => (
+      render: (v: string) => (
         <div className="text-sm text-slate-600">
-          <div>{new Date(value).toLocaleDateString()}</div>
-          <div className="text-xs text-slate-500">{new Date(value).toLocaleTimeString()}</div>
+          <div>{new Date(v).toLocaleDateString()}</div>
+          <div className="text-xs text-slate-500">{new Date(v).toLocaleTimeString()}</div>
         </div>
-      )
+      ),
     },
     {
       key: 'meta',
       label: 'Description',
-      render: (value: any, row: Transaction) => (
+      render: (v: any, row: Transaction) => (
         <div className="text-sm text-slate-600">
-          {value?.notes || (row.type === 'bid' ? 'Bid placed' : 'Wallet top-up')}
-          {value?.product_id && (
-            <div className="text-xs text-slate-500">Product: {value.product_id}</div>
+          {v?.notes || (row.type === 'bid' ? 'Bid placed' : 'Wallet top‑up')}
+          {v?.product_id && (
+            <div className="text-xs text-slate-500">Product: {v.product_id}</div>
           )}
         </div>
-      )
-    }
+      ),
+    },
   ];
 
+  /* ---------------------------------------------------------------- */
+  /*  Loading screen                                                  */
+  /* ---------------------------------------------------------------- */
   if (loading) {
     return (
       <Layout title="Wallet" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
       </Layout>
     );
   }
 
-  const totalSpent = transactions.filter(t => t.type === 'bid').reduce((sum, t) => sum + t.amount, 0);
-  const totalAdded = transactions.filter(t => t.type === 'topup').reduce((sum, t) => sum + t.amount, 0);
-
+  /* ---------------------------------------------------------------- */
+  /*  Render                                                          */
+  /* ---------------------------------------------------------------- */
   return (
     <Layout title="Wallet" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
       <div className="space-y-6">
-        {/* Wallet Balance */}
+
+        {/* --------------- Balance banner ---------------- */}
         <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -178,88 +227,101 @@ export const UserWallet: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Current Balance</h2>
-                <p className="text-4xl font-bold text-green-600">₹{balance.toLocaleString()}</p>
+                <p className="text-4xl font-bold text-green-600">
+                  ₹{currentBalance.toLocaleString()}
+                </p>
                 <p className="text-sm text-slate-600 mt-1">Available for bidding</p>
               </div>
             </div>
 
-            <Button onClick={() => setShowTopupModal(true)} size="lg">
+            <Button onClick={() => setTopupModal(true)} size="lg">
               <Plus className="h-5 w-5 mr-2" />
               Add Funds
             </Button>
           </div>
         </Card>
 
-        {/* Wallet Statistics */}
+        {/* ------------- Stat cards -------------------- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="text-center">
-            <ArrowUpRight className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <h3 className="font-semibold text-slate-900">Total Added</h3>
-            <p className="text-2xl font-bold text-green-600">₹{totalAdded.toLocaleString()}</p>
-          </Card>
-
-          <Card className="text-center">
-            <ArrowDownLeft className="h-8 w-8 text-red-600 mx-auto mb-2" />
-            <h3 className="font-semibold text-slate-900">Total Spent</h3>
-            <p className="text-2xl font-bold text-red-600">₹{totalSpent.toLocaleString()}</p>
-          </Card>
-
-          <Card className="text-center">
-            <History className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <h3 className="font-semibold text-slate-900">Transactions</h3>
-            <p className="text-2xl font-bold text-purple-600">{transactions.length}</p>
-          </Card>
+          <StatCard
+            icon={ArrowUpRight}
+            label="Total Added"
+            value={`₹${totalAdded.toLocaleString()}`}
+            color="text-green-600"
+          />
+          <StatCard
+            icon={ArrowDownLeft}
+            label="Total Spent"
+            value={`₹${totalSpent.toLocaleString()}`}
+            color="text-red-600"
+          />
+          <StatCard
+            icon={History}
+            label="Transactions"
+            value={transactions.length}
+            color="text-purple-600"
+          />
         </div>
 
-        {/* Quick Top-Up Buttons */}
+        {/* ------------- Quick add cards --------------- */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {quickTopupAmounts.map((amount) => (
+          {QUICK.map((amt) => (
             <Card
-              key={amount}
+              key={amt}
               className="text-center cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-blue-200"
-              onClick={() => {
-                setTopupAmount(amount.toString());
-                setShowTopupModal(true);
-              }}
+              onClick={() => { setTopupAmount(String(amt)); setTopupModal(true); }}
             >
               <CreditCard className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-              <h4 className="font-semibold text-slate-900">₹{amount.toLocaleString()}</h4>
+              <h4 className="font-semibold text-slate-900">₹{amt.toLocaleString()}</h4>
               <p className="text-sm text-slate-600">Quick Add</p>
             </Card>
           ))}
         </div>
 
-        {/* Transactions Table */}
+        {/* ------------- Transactions table ------------ */}
         <Card>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-slate-900">Transaction History</h3>
-            <Button variant="secondary" onClick={loadWalletData}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={loadData}
+                disabled={refreshing}
+              >
+                {refreshing
+                  ? <div className="animate-spin h-4 w-4 mr-2 border-b-2 border-blue-600 rounded-full" />
+                  : <RefreshCw className="h-4 w-4 mr-2" />}
+                Refresh
+              </Button>
+
+              <Button variant="secondary" onClick={downloadCSV}>
+                <Download className="h-4 w-4 mr-2" />
+                Download CSV
+              </Button>
+            </div>
           </div>
 
           <Table
-            columns={transactionColumns}
+            columns={columns}
             data={transactions}
-            emptyMessage="No transactions yet. Add funds to your wallet to start bidding!"
+            emptyMessage="No transactions found. Add funds to start bidding!"
           />
         </Card>
       </div>
 
-      {/* Top-Up Modal */}
+      {/* ---------------- Top‑up Modal ---------------- */}
       <Modal
-        isOpen={showTopupModal}
-        onClose={() => {
-          setShowTopupModal(false);
-          setTopupAmount('');
-        }}
+        isOpen={topupModal}
+        onClose={() => { setTopupModal(false); setTopupAmount(''); }}
         title="Add Funds to Wallet"
       >
         <div className="space-y-6">
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">Current Balance</h4>
-            <p className="text-2xl font-bold text-blue-600">₹{balance.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-blue-600">
+              ₹{currentBalance.toLocaleString()}
+            </p>
           </div>
 
           <Input
@@ -275,15 +337,15 @@ export const UserWallet: React.FC = () => {
           <div>
             <p className="text-sm font-medium text-slate-700 mb-2">Quick Select:</p>
             <div className="grid grid-cols-4 gap-2">
-              {quickTopupAmounts.map((amount) => (
+              {QUICK.map((amt) => (
                 <Button
-                  key={amount}
+                  key={amt}
                   variant="secondary"
                   size="sm"
-                  onClick={() => setTopupAmount(amount.toString())}
+                  onClick={() => setTopupAmount(String(amt))}
                   className="text-xs"
                 >
-                  ₹{amount}
+                  ₹{amt}
                 </Button>
               ))}
             </div>
@@ -292,17 +354,14 @@ export const UserWallet: React.FC = () => {
           <div className="flex space-x-3">
             <Button
               variant="secondary"
-              onClick={() => {
-                setShowTopupModal(false);
-                setTopupAmount('');
-              }}
+              onClick={() => { setTopupModal(false); setTopupAmount(''); }}
               className="flex-1"
             >
               Cancel
             </Button>
             <Button
-              onClick={handleTopup}
-              loading={topupLoading}
+              onClick={doTopup}
+              loading={topupBusy}
               className="flex-1"
             >
               Add ₹{topupAmount ? parseFloat(topupAmount).toLocaleString() : '0'}
@@ -313,3 +372,20 @@ export const UserWallet: React.FC = () => {
     </Layout>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  Tiny helper card                                                  */
+/* ------------------------------------------------------------------ */
+interface StatProps {
+  icon: any;
+  label: string;
+  value: string | number;
+  color: string;
+}
+const StatCard: React.FC<StatProps> = ({ icon: Icon, label, value, color }) => (
+  <Card className="text-center">
+    <Icon className={`h-8 w-8 ${color} mx-auto mb-2`} />
+    <h3 className="font-semibold text-slate-900">{label}</h3>
+    <p className={`text-2xl font-bold ${color}`}>{value}</p>
+  </Card>
+);

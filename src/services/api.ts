@@ -10,10 +10,10 @@ const api = axios.create({
   },
 });
 
-// Add token to requests
+// ✅ Add token from sessionStorage to requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token') || localStorage.getItem('admin_token');
+    const token = sessionStorage.getItem('token') || sessionStorage.getItem('admin_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -22,15 +22,15 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token expiry
+// ✅ Handle token expiry by clearing sessionStorage
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('admin');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('admin_token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('admin');
       window.location.href = '/';
     }
     return Promise.reject(error);

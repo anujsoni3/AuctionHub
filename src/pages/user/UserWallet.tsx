@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- *  UserWallet  –  full enhanced version
+ *  UserWallet  –  Enhanced Professional Auction Site Version
  * ----------------------------------------------------------------- */
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -26,6 +26,9 @@ import {
   CreditCard,
   RefreshCw,
   Download,
+  Shield,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -55,6 +58,10 @@ export const UserWallet: React.FC = () => {
   const [topupModal,   setTopupModal]   = useState(false);
   const [topupBusy,    setTopupBusy]    = useState(false);
   const [topupAmount,  setTopupAmount]  = useState('');
+
+  /* Success animation states */
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [recentlyAdded, setRecentlyAdded] = useState(false);
 
   /* quick‑top‑up presets */
   const QUICK   = [500, 1000, 2000, 5000];
@@ -101,7 +108,7 @@ export const UserWallet: React.FC = () => {
   };
 
   /* ---------------------------------------------------------------- */
-  /*  Top‑up handler                                                  */
+  /*  Top‑up handler with success animation                           */
   /* ---------------------------------------------------------------- */
   const doTopup = async () => {
     const amt = parseFloat(topupAmount);
@@ -116,6 +123,13 @@ export const UserWallet: React.FC = () => {
       showSuccess(`Added ₹${amt.toLocaleString()} to your wallet`);
       setTopupModal(false);
       setTopupAmount('');
+      
+      // Trigger success animation
+      setShowSuccessAnimation(true);
+      setRecentlyAdded(true);
+      setTimeout(() => setShowSuccessAnimation(false), 3000);
+      setTimeout(() => setRecentlyAdded(false), 5000);
+      
       await loadData();
     } catch (err: any) {
       showError(err?.response?.data?.error || 'Top‑up failed');
@@ -150,18 +164,18 @@ export const UserWallet: React.FC = () => {
   };
 
   /* ---------------------------------------------------------------- */
-  /*  Table columns                                                   */
+  /*  Table columns with professional styling                         */
   /* ---------------------------------------------------------------- */
   const columns = [
     {
       key: 'type',
-      label: 'Type',
+      label: 'Transaction Type',
       render: (v: string) => (
         <div className="flex items-center">
           {v === 'bid'
-            ? <ArrowDownLeft className="h-4 w-4 text-red-500 mr-2" />
-            : <ArrowUpRight  className="h-4 w-4 text-green-500 mr-2" />}
-          <span className="capitalize font-medium">{v}</span>
+            ? <ArrowDownLeft className="h-4 w-4 text-red-500 mr-3" />
+            : <ArrowUpRight  className="h-4 w-4 text-emerald-500 mr-3" />}
+          <span className="capitalize font-semibold text-slate-700">{v === 'bid' ? 'Bid Placed' : 'Funds Added'}</span>
         </div>
       ),
     },
@@ -169,7 +183,7 @@ export const UserWallet: React.FC = () => {
       key: 'amount',
       label: 'Amount',
       render: (v: number, row: Transaction) => (
-        <span className={`font-semibold ${row.type === 'bid' ? 'text-red-600' : 'text-green-600'}`}>
+        <span className={`font-bold text-lg ${row.type === 'bid' ? 'text-red-600' : 'text-emerald-600'}`}>
           {row.type === 'bid' ? '-' : '+'}₹{v.toLocaleString()}
         </span>
       ),
@@ -179,7 +193,7 @@ export const UserWallet: React.FC = () => {
       label: 'Date & Time',
       render: (v: string) => (
         <div className="text-sm text-slate-600">
-          <div>{new Date(v).toLocaleDateString()}</div>
+          <div className="font-medium">{new Date(v).toLocaleDateString()}</div>
           <div className="text-xs text-slate-500">{new Date(v).toLocaleTimeString()}</div>
         </div>
       ),
@@ -189,9 +203,11 @@ export const UserWallet: React.FC = () => {
       label: 'Description',
       render: (v: any, row: Transaction) => (
         <div className="text-sm text-slate-600">
-          {v?.notes || (row.type === 'bid' ? 'Bid placed' : 'Wallet top‑up')}
+          <div className="font-medium">{v?.notes || (row.type === 'bid' ? 'Bid placed on auction' : 'Wallet top‑up')}</div>
           {v?.product_id && (
-            <div className="text-xs text-slate-500">Product: {v.product_id}</div>
+            <div className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full inline-block mt-1">
+              Product: {v.product_id}
+            </div>
           )}
         </div>
       ),
@@ -205,7 +221,7 @@ export const UserWallet: React.FC = () => {
     return (
       <Layout title="Wallet" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent" />
         </div>
       </Layout>
     );
@@ -216,110 +232,155 @@ export const UserWallet: React.FC = () => {
   /* ---------------------------------------------------------------- */
   return (
     <Layout title="Wallet" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
-      <div className="space-y-6">
+      <div className="space-y-8 bg-gray-50 min-h-screen p-6">
 
-        {/* --------------- Balance banner ---------------- */}
-        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                <Wallet className="h-8 w-8 text-green-600" />
+        {/* --------------- Balance banner with animations ---------------- */}
+        <Card className={`relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-2xl transition-all duration-500 ${
+          recentlyAdded ? 'ring-4 ring-emerald-400 ring-opacity-50' : ''
+        }`}>
+          {/* Success animation overlay */}
+          {showSuccessAnimation && (
+            <div className="absolute inset-0 bg-emerald-400 opacity-20 animate-pulse" />
+          )}
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-6 backdrop-blur-sm">
+                  <Wallet className="h-10 w-10 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center mb-2">
+                    <h2 className="text-2xl font-bold text-white mr-3">Wallet Balance</h2>
+                    <Shield className="h-5 w-5 text-emerald-300" />
+                  </div>
+                  <p className={`text-5xl font-bold transition-all duration-500 ${
+                    recentlyAdded ? 'text-emerald-300 animate-pulse' : 'text-white'
+                  }`}>
+                    ₹{currentBalance.toLocaleString()}
+                  </p>
+                  <p className="text-blue-100 mt-2 font-medium">Available for bidding</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Current Balance</h2>
-                <p className="text-4xl font-bold text-green-600">
-                  ₹{currentBalance.toLocaleString()}
-                </p>
-                <p className="text-sm text-slate-600 mt-1">Available for bidding</p>
-              </div>
+
+              <Button 
+                onClick={() => setTopupModal(true)} 
+                size="lg"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add Funds
+              </Button>
             </div>
-
-            <Button onClick={() => setTopupModal(true)} size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Add Funds
-            </Button>
           </div>
         </Card>
 
-        {/* ------------- Stat cards -------------------- */}
+        {/* ------------- Enhanced Stat cards -------------------- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
-            icon={ArrowUpRight}
+            icon={TrendingUp}
             label="Total Added"
             value={`₹${totalAdded.toLocaleString()}`}
-            color="text-green-600"
+            color="text-emerald-600"
+            bgColor="bg-emerald-50"
+            borderColor="border-emerald-200"
           />
           <StatCard
-            icon={ArrowDownLeft}
+            icon={Gavel}
             label="Total Spent"
             value={`₹${totalSpent.toLocaleString()}`}
             color="text-red-600"
+            bgColor="bg-red-50"
+            borderColor="border-red-200"
           />
           <StatCard
             icon={History}
-            label="Transactions"
+            label="Total Transactions"
             value={transactions.length}
-            color="text-purple-600"
+            color="text-blue-600"
+            bgColor="bg-blue-50"
+            borderColor="border-blue-200"
           />
         </div>
 
-        {/* ------------- Quick add cards --------------- */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {QUICK.map((amt) => (
-            <Card
-              key={amt}
-              className="text-center cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-blue-200"
-              onClick={() => { setTopupAmount(String(amt)); setTopupModal(true); }}
-            >
-              <CreditCard className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-              <h4 className="font-semibold text-slate-900">₹{amt.toLocaleString()}</h4>
-              <p className="text-sm text-slate-600">Quick Add</p>
-            </Card>
-          ))}
+        {/* ------------- Enhanced Quick add cards --------------- */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="flex items-center mb-6">
+            <Zap className="h-6 w-6 text-amber-500 mr-3" />
+            <h3 className="text-xl font-bold text-slate-800">Quick Add Funds</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {QUICK.map((amt) => (
+              <Card
+                key={amt}
+                className="text-center cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 border-blue-100 hover:border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100"
+                onClick={() => { setTopupAmount(String(amt)); setTopupModal(true); }}
+              >
+                <CreditCard className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+                <h4 className="font-bold text-xl text-slate-900">₹{amt.toLocaleString()}</h4>
+                <p className="text-sm text-blue-600 font-medium">Quick Add</p>
+              </Card>
+            ))}
+          </div>
         </div>
 
-        {/* ------------- Transactions table ------------ */}
-        <Card>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-slate-900">Transaction History</h3>
+        {/* ------------- Enhanced Transactions table ------------ */}
+        <Card className="shadow-xl">
+          <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-6 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <History className="h-6 w-6 text-slate-700 mr-3" />
+                <h3 className="text-2xl font-bold text-slate-900">Transaction History</h3>
+              </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                onClick={loadData}
-                disabled={refreshing}
-              >
-                {refreshing
-                  ? <div className="animate-spin h-4 w-4 mr-2 border-b-2 border-blue-600 rounded-full" />
-                  : <RefreshCw className="h-4 w-4 mr-2" />}
-                Refresh
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={loadData}
+                  disabled={refreshing}
+                  className="bg-white border-slate-200 hover:bg-slate-50"
+                >
+                  {refreshing
+                    ? <div className="animate-spin h-4 w-4 mr-2 border-2 border-blue-600 border-t-transparent rounded-full" />
+                    : <RefreshCw className="h-4 w-4 mr-2" />}
+                  Refresh
+                </Button>
 
-              <Button variant="secondary" onClick={downloadCSV}>
-                <Download className="h-4 w-4 mr-2" />
-                Download CSV
-              </Button>
+                <Button 
+                  variant="secondary" 
+                  onClick={downloadCSV}
+                  className="bg-white border-slate-200 hover:bg-slate-50"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
+              </div>
             </div>
           </div>
 
-          <Table
-            columns={columns}
-            data={transactions}
-            emptyMessage="No transactions found. Add funds to start bidding!"
-          />
+          <div className="p-6">
+            <Table
+              columns={columns}
+              data={transactions}
+              emptyMessage="No transactions found. Add funds to start bidding!"
+            />
+          </div>
         </Card>
       </div>
 
-      {/* ---------------- Top‑up Modal ---------------- */}
+      {/* ---------------- Enhanced Top‑up Modal ---------------- */}
       <Modal
         isOpen={topupModal}
         onClose={() => { setTopupModal(false); setTopupAmount(''); }}
         title="Add Funds to Wallet"
       >
         <div className="space-y-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Current Balance</h4>
-            <p className="text-2xl font-bold text-blue-600">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+            <div className="flex items-center mb-3">
+              <Wallet className="h-5 w-5 text-blue-600 mr-2" />
+              <h4 className="font-bold text-blue-900">Current Balance</h4>
+            </div>
+            <p className="text-3xl font-bold text-blue-700">
               ₹{currentBalance.toLocaleString()}
             </p>
           </div>
@@ -332,10 +393,11 @@ export const UserWallet: React.FC = () => {
             placeholder="Enter amount (min ₹10, max ₹1,00,000)"
             min="10"
             max="100000"
+            className="text-lg"
           />
 
           <div>
-            <p className="text-sm font-medium text-slate-700 mb-2">Quick Select:</p>
+            <p className="text-sm font-bold text-slate-700 mb-3">Quick Select:</p>
             <div className="grid grid-cols-4 gap-2">
               {QUICK.map((amt) => (
                 <Button
@@ -343,7 +405,7 @@ export const UserWallet: React.FC = () => {
                   variant="secondary"
                   size="sm"
                   onClick={() => setTopupAmount(String(amt))}
-                  className="text-xs"
+                  className="text-sm font-medium bg-slate-100 hover:bg-blue-100 hover:text-blue-700 transition-colors"
                 >
                   ₹{amt}
                 </Button>
@@ -355,16 +417,16 @@ export const UserWallet: React.FC = () => {
             <Button
               variant="secondary"
               onClick={() => { setTopupModal(false); setTopupAmount(''); }}
-              className="flex-1"
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700"
             >
               Cancel
             </Button>
             <Button
               onClick={doTopup}
               loading={topupBusy}
-              className="flex-1"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              Add ₹{topupAmount ? parseFloat(topupAmount).toLocaleString() : '0'}
+              {topupBusy ? 'Processing...' : `Add ₹${topupAmount ? parseFloat(topupAmount).toLocaleString() : '0'}`}
             </Button>
           </div>
         </div>
@@ -374,18 +436,22 @@ export const UserWallet: React.FC = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Tiny helper card                                                  */
+/*  Enhanced StatCard component                                       */
 /* ------------------------------------------------------------------ */
 interface StatProps {
   icon: any;
   label: string;
   value: string | number;
   color: string;
+  bgColor: string;
+  borderColor: string;
 }
-const StatCard: React.FC<StatProps> = ({ icon: Icon, label, value, color }) => (
-  <Card className="text-center">
-    <Icon className={`h-8 w-8 ${color} mx-auto mb-2`} />
-    <h3 className="font-semibold text-slate-900">{label}</h3>
-    <p className={`text-2xl font-bold ${color}`}>{value}</p>
+const StatCard: React.FC<StatProps> = ({ icon: Icon, label, value, color, bgColor, borderColor }) => (
+  <Card className={`text-center ${bgColor} ${borderColor} border-2 hover:shadow-lg transition-all duration-300 transform hover:scale-105`}>
+    <div className="p-6">
+      <Icon className={`h-10 w-10 ${color} mx-auto mb-3`} />
+      <h3 className="font-bold text-slate-900 text-lg mb-2">{label}</h3>
+      <p className={`text-3xl font-bold ${color}`}>{value}</p>
+    </div>
   </Card>
 );

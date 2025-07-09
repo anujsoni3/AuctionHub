@@ -19,12 +19,14 @@ interface AdminRegisterData extends RegisterData {
 }
 
 export const authService = {
-  // User authentication
+  // ------------------------------
+  // ✅ User authentication
+  // ------------------------------
   async userLogin(credentials: LoginCredentials) {
     const response = await api.post('/login', credentials);
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('user', JSON.stringify(response.data.user));
     }
     return response.data;
   },
@@ -39,12 +41,14 @@ export const authService = {
     return response.data;
   },
 
-  // Admin authentication
+  // ------------------------------
+  // ✅ Admin authentication
+  // ------------------------------
   async adminLogin(credentials: AdminLoginCredentials) {
     const response = await api.post('/admin/login', credentials);
     if (response.data.token) {
-      localStorage.setItem('admin_token', response.data.token);
-      localStorage.setItem('admin', JSON.stringify(response.data.admin));
+      sessionStorage.setItem('admin_token', response.data.token);
+      sessionStorage.setItem('admin', JSON.stringify(response.data.admin));
     }
     return response.data;
   },
@@ -59,30 +63,43 @@ export const authService = {
     return response.data;
   },
 
-  // Logout
+  // ------------------------------
+  // 🔐 Logout
+  // ------------------------------
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('admin');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('admin_token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('admin');
   },
 
-  // Get current user/admin
+  // ------------------------------
+  // 👤 Get current user/admin
+  // ------------------------------
   getCurrentUser() {
-    const user = localStorage.getItem('user');
+    const user = sessionStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
 
   getCurrentAdmin() {
-    const admin = localStorage.getItem('admin');
+    const admin = sessionStorage.getItem('admin');
     return admin ? JSON.parse(admin) : null;
   },
+  async getMyAuctions() {
+  const response = await api.get('/my_auctions');
+  return response.data;
+  },
 
+
+  // ------------------------------
+  // 🔐 Auth checks
+  // ------------------------------
   isAuthenticated() {
-    return !!localStorage.getItem('token');
+    return !!sessionStorage.getItem('token');
   },
 
   isAdminAuthenticated() {
-    return !!localStorage.getItem('admin_token');
+    return !!sessionStorage.getItem('admin_token');
   }
+
 };

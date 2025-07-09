@@ -82,6 +82,20 @@ export const auctionService = {
     const response = await api.get(`/time-left?product_key=${productKey}`);
     return response.data;
   },
+  // Just above // Admin endpoints
+async getUserAuctions(): Promise<{
+  user_details: {
+    id: string;
+    name: string;
+    username: string;
+    mobile_number: string;
+    auctions: string[];
+  };
+}> {
+  const response = await api.get('/my_auctions');
+  return response.data;
+},
+
 
   // Admin endpoints
   async createAuction(data: { id: string; name: string; product_ids: string[]; valid_until: string }) {

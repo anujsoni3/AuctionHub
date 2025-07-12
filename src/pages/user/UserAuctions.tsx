@@ -46,7 +46,7 @@ export const UserAuctions: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const myId = String(user?.id || '');
 
-  useEffect(() => {
+ useEffect(() => {
     (async () => {
       try {
         const [allAuctions, myAuctionRes] = await Promise.all([
@@ -72,8 +72,8 @@ export const UserAuctions: React.FC = () => {
         setLoading(false);
       }
     })();
-  }, [showError]);
-
+  // 🚩 FIX: Empty dependency array so this only runs once on mount
+  }, []);
   useEffect(() => {
     if (!auctions.length) return;
     const id = setInterval(() => {

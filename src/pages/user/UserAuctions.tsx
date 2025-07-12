@@ -20,7 +20,6 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-/* Sidebar config */
 const userSidebarItems = [
   { path: '/user/dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
   { path: '/user/auctions', label: 'Browse Auctions', icon: <Search className="h-5 w-5" /> },
@@ -32,16 +31,12 @@ export const UserAuctions: React.FC = () => {
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-
   const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
-
   const [productBids, setProductBids] = useState<Record<string, any>>({});
   const [timeLeft, setTimeLeft] = useState<Record<string, number>>({});
-
   const [registeredAuctions, setRegisteredAuctions] = useState<Set<string>>(new Set());
-
   const [showBidModal, setShowBidModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [bidAmount, setBidAmount] = useState('');
@@ -51,7 +46,6 @@ export const UserAuctions: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const myId = String(user?.id || '');
 
-  // 📦 Load all auctions + my registered ones
   useEffect(() => {
     (async () => {
       try {
@@ -59,7 +53,6 @@ export const UserAuctions: React.FC = () => {
           auctionService.getAuctions(),
           authService.getMyAuctions(),
         ]);
-
         setAuctions(allAuctions);
 
         const myAuctionIds = new Set<string>(
@@ -105,7 +98,6 @@ export const UserAuctions: React.FC = () => {
     try {
       const data = await auctionService.getAuctionProducts(auctionId);
       setProducts(data);
-
       const bids = await Promise.all(
         data.map(async p => {
           try {
@@ -191,7 +183,7 @@ export const UserAuctions: React.FC = () => {
   if (loading) {
     return (
       <Layout title="Browse Auctions" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-64 animate-pulse">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
       </Layout>
@@ -200,7 +192,7 @@ export const UserAuctions: React.FC = () => {
 
   return (
     <Layout title="Browse Auctions" sidebarItems={userSidebarItems} sidebarTitle="User Portal">
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in">
         <Card>
           <div className="flex items-center space-x-4">
             <Input
@@ -219,71 +211,64 @@ export const UserAuctions: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <h3 className="text-xl font-semibold text-slate-900">Active Auctions</h3>
-
             {filteredAuctions.length === 0 ? (
               <Card>
                 <p className="text-center text-slate-500 py-8">No auctions found</p>
               </Card>
             ) : (
-              <div className="space-y-4">
-                {filteredAuctions.map(a => {
-                  const secs = timeLeft[a.id] ?? getSecondsLeft(a.valid_until);
-                  const ended = secs <= 0;
-                  const registered = registeredAuctions.has(a.id);
+              filteredAuctions.map(a => {
+                const secs = timeLeft[a.id] ?? getSecondsLeft(a.valid_until);
+                const ended = secs <= 0;
+                const registered = registeredAuctions.has(a.id);
 
-                  return (
-                    <Card key={a.id} className="hover:shadow-md transition-shadow">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-slate-900 text-lg">{a.name}</h4>
-                          <p className="text-sm text-slate-600 mb-2">ID: {a.id}</p>
-                          <div className="flex items-center text-sm text-slate-500">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>Ends: {new Date(a.valid_until).toLocaleString()}</span>
-                          </div>
-                          <div className="flex items-center mt-1 text-sm">
-                            <Timer className="h-4 w-4 mr-1 text-amber-600" />
-                            <span className={`font-medium ${ended ? 'text-red-600' : 'text-amber-600'}`}>
-                              {formatTimeLeft(secs)}
-                            </span>
-                          </div>
+                return (
+                  <Card key={a.id} className="hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-slate-900 text-lg">{a.name}</h4>
+                        <p className="text-sm text-slate-600 mb-2">ID: {a.id}</p>
+                        <div className="flex items-center text-sm text-slate-500">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>Ends: {new Date(a.valid_until).toLocaleString()}</span>
                         </div>
-
-                        <div className="text-right space-y-2">
-                          <div className="text-sm">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              ended
-                                ? 'bg-red-100 text-red-800'
-                                : secs < 3600
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {ended ? 'Ended' : 'Active'}
-                            </span>
-                          </div>
-
-                          <div className="space-x-2">
-                            <Button size="sm" variant="secondary" onClick={() => handleViewProducts(a)}>
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Products
-                            </Button>
-
-                            {registered ? (
-                              <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs inline-block">
-                                Registered
-                              </span>
-                            ) : (
-                              <Button size="sm" onClick={() => handleRegisterForAuction(a.id)} disabled={ended}>
-                                Register
-                              </Button>
-                            )}
-                          </div>
+                        <div className="flex items-center mt-1 text-sm">
+                          <Timer className="h-4 w-4 mr-1 text-amber-600" />
+                          <span className={`font-medium ${ended ? 'text-red-600' : 'text-amber-600'}`}>
+                            {formatTimeLeft(secs)}
+                          </span>
                         </div>
                       </div>
-                    </Card>
-                  );
-                })}
-              </div>
+                      <div className="text-right space-y-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          ended
+                            ? 'bg-red-100 text-red-800'
+                            : secs < 3600
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {ended ? 'Ended' : 'Active'}
+                        </span>
+
+                        <div className="space-x-2">
+                          <Button size="sm" variant="secondary" onClick={() => handleViewProducts(a)}>
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Products
+                          </Button>
+                          {registered ? (
+                            <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs inline-block">
+                              Registered
+                            </span>
+                          ) : (
+                            <Button size="sm" onClick={() => handleRegisterForAuction(a.id)} disabled={ended}>
+                              Register
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
             )}
           </div>
 
@@ -304,18 +289,14 @@ export const UserAuctions: React.FC = () => {
                   {products.map(p => {
                     const registered = registeredAuctions.has(selectedAuction!.id);
                     const isEnded = timeLeft[selectedAuction!.id] <= 0;
-
                     return (
-                      <div key={p.id} className="p-4 bg-slate-50 rounded-lg border hover:bg-slate-100 transition-colors">
+                      <div key={p.id} className="p-4 bg-slate-50 rounded-lg border hover:bg-slate-100 transition">
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <h5 className="font-medium text-slate-900">{p.name}</h5>
                             <p className="text-sm text-slate-600">ID: {p.id}</p>
-                            {p.description && (
-                              <p className="text-sm text-slate-500 mt-1">{p.description}</p>
-                            )}
+                            {p.description && <p className="text-sm text-slate-500 mt-1">{p.description}</p>}
                           </div>
-
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             p.status === 'sold'
                               ? 'bg-red-100 text-red-800'
@@ -324,13 +305,11 @@ export const UserAuctions: React.FC = () => {
                             {p.status === 'sold' ? 'Sold' : 'Available'}
                           </span>
                         </div>
-
                         <div className="flex items-center justify-between">
                           <div className="flex items-center text-sm text-slate-600">
                             <TrendingUp className="h-4 w-4 mr-1" />
                             <span>Highest: ₹{productBids[p.id]?.highest_bid || 0}</span>
                           </div>
-
                           {registered ? (
                             <Button size="sm" onClick={() => openBidModal(p)} disabled={p.status === 'sold' || isEnded}>
                               <Gavel className="h-4 w-4 mr-1" />

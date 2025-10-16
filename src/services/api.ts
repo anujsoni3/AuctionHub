@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://voiceagentomnidim-production.up.railway.app/';
+const API_BASE_URL = 'https://voiceagent-omnidim-eqsr.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

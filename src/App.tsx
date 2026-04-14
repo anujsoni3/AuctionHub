@@ -35,6 +35,7 @@ function App() {
             <Route path="/user/register" element={<UserRegister />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/register" element={<AdminRegister />} />
+            
 
             {/* Protected user routes */}
             <Route path="/user/dashboard" element={

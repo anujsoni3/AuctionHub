@@ -4,8 +4,23 @@ SmartAuction is a voice-driven, API-connected auction platform that allows users
 
 ---
 
-# Website Link ->
-[ https://auction-hub-c61p.vercel.app/](https://smart-auction-1213.vercel.app/)
+## Website Link
+
+[https://smart-auction-1213.vercel.app/](https://smart-auction-1213.vercel.app/)
+
+## Frontend Setup
+
+Create a local env file before running locally:
+
+```bash
+cp .env.example .env
+```
+
+Set your backend URL in `.env`:
+
+```env
+VITE_API_BASE_URL=https://your-backend-url.example.com
+```
 
 ## 🌟 Features
 
